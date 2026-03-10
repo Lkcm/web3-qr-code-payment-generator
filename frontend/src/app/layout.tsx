@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import Header from "@/components/organisms/Header";
 
 export const metadata: Metadata = {
   title: "Web3 QR Code Payment Generator",
@@ -12,9 +13,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en-US">
-      <body className="min-h-screen bg-gray-50 text-gray-900 antialiased">
-        {children}
-      </body>
-    </html>
+   <body className="flex flex-col min-h-screen">
+ <Header/>
+ <main className="flex flex-col flex-1">
+    {children}
+  </main>
+    </body>
+  </html>
   );
 }
