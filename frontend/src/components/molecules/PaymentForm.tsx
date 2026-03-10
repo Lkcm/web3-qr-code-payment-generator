@@ -25,6 +25,7 @@ const PaymentForm = () => {
       <Button
         label="Generate Payment Link"
         onClick={generate}
+        
         disabled={!address || !amount}
       />
       {paymentUri && <PaymentModal uri={paymentUri} onClose={clear} />}
