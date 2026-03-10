@@ -1,6 +1,5 @@
-
 import { createWalletClient, custom } from "viem";
-import { mainnet } from "viem/chains";
+import { bscTestnet } from "viem/chains";
 
 export async function connectMetaMask() {
   if (!window.ethereum) throw new Error("MetaMask not found");
@@ -11,7 +10,7 @@ export async function connectMetaMask() {
 
   const client = createWalletClient({
     account: address,
-    chain: mainnet,
+    chain: bscTestnet,
     transport: custom(window.ethereum),
   });
 
