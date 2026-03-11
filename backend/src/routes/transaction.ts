@@ -1,8 +1,15 @@
 import { Router, Request, Response } from "express";
-import { parseEther } from "viem";
+import { parseEther, createPublicClient, http} from "viem";
+import { bscTestnet } from "viem/chains";
 import Transaction from "../models/Transaction";
 
 const router = Router();
+
+const client = createPublicClient({
+  chain: bscTestnet,
+  transport: http(),
+});
+
 
 router.post("/", async (req: Request, res: Response) => {
   const { address, amount } = req.body;
@@ -12,9 +19,12 @@ router.post("/", async (req: Request, res: Response) => {
     return;
   }
 
+  const currentBlock = await client.getBlockNumber();
+
   const transaction = await Transaction.create({
     address: address.toLowerCase(),
     expectedAmount: parseEther(amount).toString(),
+    fromBlock: currentBlock.toString(),
   });
 
   res.status(201).json({ data: transaction });

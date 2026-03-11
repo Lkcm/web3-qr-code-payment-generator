@@ -5,6 +5,7 @@ export type TransactionStatus = "pending" | "confirmed" | "invalid_amount";
 export interface ITransaction extends Document {
   address: string;
   expectedAmount: string;
+  fromBlock: string;
   status: TransactionStatus;
   txHash: string | null;
   receivedAmount: string | null;
@@ -16,6 +17,7 @@ const transactionSchema = new Schema<ITransaction>(
   {
     address: { type: String, required: true },
     expectedAmount: { type: String, required: true },
+    fromBlock: { type: String, required: true },
     status: {
       type: String,
       enum: ["pending", "confirmed", "invalid_amount"],

@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import routes from "./routes";
+import routes from "./routes/index";
 import { connectDB } from "./lib/db";
 import { startWatcher } from "./lib/watcher";
 
@@ -13,7 +13,7 @@ app.use(cors({
 app.use(express.json());
 app.use("/api", routes);
 
-app.get("/health", (req, res) => {
+app.get("/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 

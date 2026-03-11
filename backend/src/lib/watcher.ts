@@ -7,44 +7,48 @@ const client = createPublicClient({
   transport: http(),
 });
 
-export async function startWatcher(): Promise<void> {
-  console.log("👀 Watching blockchain...");
+const checkPendingTransactions = async () : Promise<void> => {
+  const pendingTransactions = await Transaction.find({ status: "pending" });
+  if (!pendingTransactions.length) return;
 
-  client.watchBlocks({
-    onBlock: async (block) => {
+  const currentBlock = await client.getBlockNumber();
+
+  for (const pending of pendingTransactions) {
+    const address = pending.address as `0x${string}`;
+    const fromBlock = BigInt(pending.fromBlock);
+
+    for (let i = fromBlock; i <= currentBlock; i++) {
       const fullBlock = await client.getBlock({
-        blockHash: block.hash,
+        blockNumber: i,
         includeTransactions: true,
       });
 
       for (const tx of fullBlock.transactions) {
         if (typeof tx === "string" || !tx.to) continue;
+        if (tx.to.toLowerCase() !== address.toLowerCase()) continue;
+        if (tx.value.toString() !== pending.expectedAmount) continue;
 
-        const pending = await Transaction.findOne({
-          address: tx.to.toLowerCase(),
-          status: "pending",
+        const alreadyProcessed = await Transaction.findOne({ txHash: tx.hash });
+        if (alreadyProcessed) continue;
+
+        await Transaction.findByIdAndUpdate(pending._id, {
+          status: "confirmed",
+          txHash: tx.hash,
+          receivedAmount: tx.value.toString(),
         });
 
-        if (!pending) continue;
-
-        const expectedWei = BigInt(pending.expectedAmount);
-
-        if (tx.value === expectedWei) {
-          await Transaction.findByIdAndUpdate(pending._id, {
-            status: "confirmed",
-            txHash: tx.hash,
-            receivedAmount: tx.value.toString(),
-          });
-          console.log(`✅ Transaction confirmed: ${tx.hash}`);
-        } else {
-          await Transaction.findByIdAndUpdate(pending._id, {
-            status: "invalid_amount",
-            txHash: tx.hash,
-            receivedAmount: tx.value.toString(),
-          });
-          console.log(`❌ Invalid amount for tx: ${tx.hash}`);
-        }
+        console.log(`✅ Transaction confirmed: ${tx.hash}`);
       }
-    },
-  });
+    }
+
+    // Update fromBlock to avoid re-scanning old blocks
+    await Transaction.findByIdAndUpdate(pending._id, {
+      fromBlock: currentBlock.toString(),
+    });
+  }
+}
+
+export async function startWatcher(): Promise<void> {
+  console.log("👀 Watching blockchain...");
+  setInterval(checkPendingTransactions, 5000);
 }

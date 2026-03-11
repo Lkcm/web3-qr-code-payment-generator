@@ -1,7 +1,7 @@
 {
   "name": "backend",
-  "type": "module",
   "version": "1.0.0",
+  "type": "module",
   "description": "Node.js backend API",
   "main": "dist/index.js",
   "scripts": {
