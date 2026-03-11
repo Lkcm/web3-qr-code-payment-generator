@@ -1,6 +1,6 @@
 import { createPublicClient, http } from "viem";
 import { bscTestnet } from "viem/chains";
-import Transaction from "../models/Transaction.js";
+import Transaction from "../models/Transaction";
 
 const client = createPublicClient({
   chain: bscTestnet,
@@ -12,9 +12,9 @@ export async function startWatcher(): Promise<void> {
 
   client.watchBlocks({
     includeTransactions: true,
-    emitMissed: true,      // garante que blocos perdidos sejam processados
-    emitOnBegin: true,     // processa o bloco atual ao iniciar
-    pollingInterval: 4_000, // BSC testnet tem ~3s por bloco
+    emitMissed: true,    
+    emitOnBegin: true,    
+    pollingInterval: 4_000,
     onBlock: async (block) => {
       console.log(`📦 Block: ${block.number} | txs: ${block.transactions.length}`);
 
