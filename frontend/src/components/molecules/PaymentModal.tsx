@@ -10,7 +10,7 @@ interface Props {
 
 const PaymentModal = ({ uri, onClose }: Props) => {
   const [copied, setCopied] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(30);
+  const [timeLeft, setTimeLeft] = useState(60);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

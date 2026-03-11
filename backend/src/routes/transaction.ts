@@ -12,7 +12,7 @@ const client = createPublicClient({
 
 const router = Router();
 
-const EXPIRY_SECONDS = 30;
+const EXPIRY_SECONDS = 60;
 
 router.get("/", async (req: Request, res: Response) => {
   const { address } = req.query;
