@@ -1,20 +1,41 @@
+"use client";
 import { useState } from "react";
 import { parseEther } from "viem";
+import { createTransaction } from "@/services/transactions";
 
-export function usePaymentLink(address: string | null) {
+const usePaymentLink = (address: string | null) => {
   const [amount, setAmount] = useState("");
   const [paymentUri, setPaymentUri] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  function generate() {
+  const generate = async () => {
     if (!address || !amount) return;
-    const valueInWei = parseEther(amount);
-    const uri = `ethereum:${address}@97?value=${valueInWei}`;
-    setPaymentUri(uri);
+    setLoading(true);
+    try {
+      await createTransaction(address, amount);
+      const valueInWei = parseEther(amount);
+      const uri = `ethereum:${address}@97?value=${valueInWei}`;
+      setPaymentUri(uri);
+    } catch (e) {
+      console.error("Failed to generate payment link:", e);
+    } finally {
+      setLoading(false);
+    }
   }
 
-  function clear() {
+  const clear = () => {
     setPaymentUri(null);
+    setAmount("");
   }
 
-  return { amount, setAmount, paymentUri, generate, clear };
-}
+  return {
+    amount,
+    setAmount,
+    paymentUri,
+    loading,
+    generate,
+    clear,
+  };
+};
+
+export default usePaymentLink;

@@ -1,16 +1,16 @@
 "use client";
 import { useWallet } from "@/hooks/useWallet";
-import { usePaymentLink } from "@/hooks/usePaymentLink";
+import usePaymentLink from "@/hooks/usePaymentLink";
 import PaymentModal from "@/components/molecules/PaymentModal";
 import Input from "@/components/atoms/Input";
 import Button from "@/components/atoms/Button";
 
 const PaymentForm = () => {
   const { address } = useWallet();
-  const { amount, setAmount, paymentUri, generate, clear } = usePaymentLink(address);
+  const { amount, setAmount, paymentUri, loading, generate, clear } = usePaymentLink(address);
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="space-y-3">
       <p className="text-gray-400 text-sm">
         {address
           ? `Receiving to: ${address.slice(0, 6)}...${address.slice(-4)}`
@@ -25,7 +25,7 @@ const PaymentForm = () => {
       <Button
         label="Generate Payment Link"
         onClick={generate}
-        
+        loading={loading}
         disabled={!address || !amount}
       />
       {paymentUri && <PaymentModal uri={paymentUri} onClose={clear} />}
