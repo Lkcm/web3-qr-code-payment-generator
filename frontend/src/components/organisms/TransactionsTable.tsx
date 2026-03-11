@@ -1,31 +1,53 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { formatEther } from "viem";
 import { getTransactions, Transaction, TransactionStatus } from "@/services/transactions";
-
-const POLL_INTERVAL = 5000;
+import { useSocket } from "@/contexts/SocketContext";
 
 const statusConfig: Record<TransactionStatus, { label: string; className: string }> = {
   pending: { label: "Pending", className: "bg-yellow-50 text-yellow-600 border-yellow-200" },
   confirmed: { label: "Confirmed", className: "bg-green-50 text-green-600 border-green-200" },
   invalid_amount: { label: "Invalid Amount", className: "bg-red-50 text-red-600 border-red-200" },
+  expired: { label: "Expired", className: "bg-gray-100 text-gray-500 border-gray-200" },
 };
 
 const TransactionsTable = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const { socket } = useSocket();
+  const transactionsRef = useRef<Transaction[]>([]);
 
-  async function fetchTransactions() {
-    const data = await getTransactions();
-    setTransactions(data);
-    setLoading(false);
-  }
+  // Keep ref in sync with state
+  useEffect(() => {
+    transactionsRef.current = transactions;
+  }, [transactions]);
 
   useEffect(() => {
-    fetchTransactions();
-    const interval = setInterval(fetchTransactions, POLL_INTERVAL);
-    return () => clearInterval(interval);
+    getTransactions()
+      .then((data) => {
+        setTransactions(data);
+        transactionsRef.current = data;
+      })
+      .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on("transaction:update", (updated: Transaction) => {
+      console.log("📡 Transaction update received:", updated._id);
+      
+      const exists = transactionsRef.current.some((tx) => tx._id === updated._id);
+
+      if (exists) {
+        setTransactions((prev) => prev.map((tx) => tx._id === updated._id ? updated : tx));
+      } else {
+        setTransactions((prev) => [updated, ...prev]);
+      }
+    });
+
+    return () => { socket.off("transaction:update"); };
+  }, [socket]);
 
   if (loading) {
     return (
@@ -88,6 +110,6 @@ const TransactionsTable = () => {
       </table>
     </div>
   );
-}
+};
 
 export default TransactionsTable

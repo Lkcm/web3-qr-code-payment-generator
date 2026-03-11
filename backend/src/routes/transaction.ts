@@ -1,33 +1,22 @@
 import { Router, Request, Response } from "express";
-import { parseEther, createPublicClient, http} from "viem";
+import { createPublicClient, http, parseEther } from "viem";
 import { bscTestnet } from "viem/chains";
-import Transaction from "../models/Transaction";
-
-const router = Router();
+import Transaction from "../models/Transaction.js";
+import { addToPendingMap } from "../lib/watcher.js";
+import { emitTransactionUpdate } from "../lib/socket.js";
 
 const client = createPublicClient({
   chain: bscTestnet,
-  transport: http(),
+  transport: http(process.env.ANKR_RPC_URL),
 });
 
+const router = Router();
 
-router.post("/", async (req: Request, res: Response) => {
-  const { address, amount } = req.body;
+const EXPIRY_SECONDS = 30;
 
-  if (!address || !amount) {
-    res.status(400).json({ error: "Address and amount are required" });
-    return;
-  }
-
-  const currentBlock = await client.getBlockNumber();
-
-  const transaction = await Transaction.create({
-    address: address.toLowerCase(),
-    expectedAmount: parseEther(amount).toString(),
-    fromBlock: currentBlock.toString(),
-  });
-
-  res.status(201).json({ data: transaction });
+router.get("/", async (_req: Request, res: Response) => {
+  const transactions = await Transaction.find().sort({ createdAt: -1 });
+  res.json({ data: transactions });
 });
 
 router.get("/:id", async (req: Request, res: Response) => {
@@ -39,9 +28,28 @@ router.get("/:id", async (req: Request, res: Response) => {
   res.json({ data: transaction });
 });
 
-router.get("/", async (_req: Request, res: Response) => {
-  const transactions = await Transaction.find().sort({ createdAt: -1 });
-  res.json({ data: transactions });
+router.post("/", async (req: Request, res: Response) => {
+  const { address, amount } = req.body;
+
+  if (!address || !amount) {
+    res.status(400).json({ error: "Address and amount are required" });
+    return;
+  }
+
+  const currentBlock = await client.getBlockNumber();
+  const expiresAt = new Date(Date.now() + EXPIRY_SECONDS * 1000);
+
+  const transaction = await Transaction.create({
+    address: address.toLowerCase(),
+    expectedAmount: parseEther(amount).toString(),
+    fromBlock: currentBlock.toString(),
+    expiresAt,
+  });
+
+  addToPendingMap(transaction);
+  emitTransactionUpdate(transaction.address, transaction);
+
+  res.status(201).json({ data: transaction });
 });
 
 export default router;

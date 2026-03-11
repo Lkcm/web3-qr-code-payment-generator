@@ -1,32 +1,69 @@
 import { createPublicClient, http } from "viem";
 import { bscTestnet } from "viem/chains";
-import Transaction from "../models/Transaction";
+import Transaction, { ITransaction } from "../models/Transaction.js";
+import { emitTransactionUpdate } from "./socket.js";
 
 const client = createPublicClient({
   chain: bscTestnet,
   transport: http(process.env.ANKR_RPC_URL),
 });
 
-export async function startWatcher(): Promise<void> {
-  console.log("👀 Watching blockchain via watchBlocks...");
+type PendingEntry = {
+  _id: string;
+  address: string;
+  expectedAmount: string;
+  expiresAt: Date;
+};
 
-  client.watchBlocks({
+const pendingMap = new Map<string, PendingEntry>();
+let unwatch: (() => void) | null = null;
+
+export function addToPendingMap(transaction: ITransaction): void {
+  pendingMap.set(transaction._id.toString(), {
+    _id: transaction._id.toString(),
+    address: transaction.address,
+    expectedAmount: transaction.expectedAmount,
+    expiresAt: transaction.expiresAt,
+  });
+  console.log(`📋 Added to pending map: ${transaction._id} | map size: ${pendingMap.size}`);
+  startWatching();
+}
+
+function startWatching(): void {
+  if (unwatch) return; // already watching
+
+  console.log("👀 Starting watcher...");
+  unwatch = client.watchBlocks({
     includeTransactions: true,
-    emitMissed: true,    
-    emitOnBegin: true,    
+    emitMissed: true,
+    emitOnBegin: true,
     pollingInterval: 4_000,
     onBlock: async (block) => {
-      console.log(`📦 Block: ${block.number} | txs: ${block.transactions.length}`);
+      console.log(`📦 Block: ${block.number} | txs: ${block.transactions.length} | pending: ${pendingMap.size}`);
 
-  const pendingTransactions = await Transaction.find({ status: "pending" });
-  if (!pendingTransactions.length) {
-    console.log(`   └─ No pending transactions, skipping`);
-    return;
-  }
+      const now = new Date();
 
-  console.log(`   └─ ${pendingTransactions.length} pending transaction(s) to check`);
+      // Check for expired transactions
+      for (const [id, entry] of pendingMap) {
+        if (now > entry.expiresAt) {
+          pendingMap.delete(id);
+          console.log(`⏰ Transaction expired: ${id}`);
 
-      const pendingAddresses = new Set(pendingTransactions.map((t) => t.address.toLowerCase()));
+          const updated = await Transaction.findByIdAndUpdate(
+            id,
+            { status: "expired" },
+            { new: true }
+          );
+          if (updated) emitTransactionUpdate(entry.address, updated);
+        }
+      }
+
+      if (pendingMap.size === 0) {
+        stopWatching();
+        return;
+      }
+
+      const pendingAddresses = new Set([...pendingMap.values()].map((e) => e.address.toLowerCase()));
 
       for (const tx of block.transactions) {
         if (typeof tx === "string" || !tx.to) continue;
@@ -37,13 +74,13 @@ export async function startWatcher(): Promise<void> {
         console.log(`   └─ to: ${tx.to}`);
         console.log(`   └─ value: ${tx.value}`);
 
-        const pending = pendingTransactions.find(
-          (p) =>
-            p.address.toLowerCase() === tx.to!.toLowerCase() &&
-            p.expectedAmount === tx.value.toString()
+        const entry = [...pendingMap.values()].find(
+          (e) =>
+            e.address.toLowerCase() === tx.to!.toLowerCase() &&
+            e.expectedAmount === tx.value.toString()
         );
 
-        if (!pending) {
+        if (!entry) {
           console.log(`   └─ ❌ No matching pending transaction`);
           continue;
         }
@@ -51,17 +88,40 @@ export async function startWatcher(): Promise<void> {
         const alreadyProcessed = await Transaction.findOne({ txHash: tx.hash });
         if (alreadyProcessed) continue;
 
-        await Transaction.findByIdAndUpdate(pending._id, {
-          status: "confirmed",
-          txHash: tx.hash,
-          receivedAmount: tx.value.toString(),
-        });
+        const updated = await Transaction.findByIdAndUpdate(
+          entry._id,
+          { status: "confirmed", txHash: tx.hash, receivedAmount: tx.value.toString() },
+          { new: true }
+        );
 
-        console.log(`   └─ ✅ Transaction confirmed: ${tx.hash}`);
+        pendingMap.delete(entry._id);
+        console.log(`   └─ ✅ Transaction confirmed: ${tx.hash} | map size: ${pendingMap.size}`);
+
+        if (updated) emitTransactionUpdate(entry.address, updated);
+
+        if (pendingMap.size === 0) stopWatching();
       }
     },
     onError: (error) => {
       console.error("⚠️ Watcher error:", error.message);
     },
   });
+}
+
+function stopWatching(): void {
+  if (!unwatch) return;
+  unwatch();
+  unwatch = null;
+  console.log("🛑 Watcher stopped — no pending transactions");
+}
+
+export async function startWatcher(): Promise<void> {
+  // Re-populate map from DB on startup
+  const pending = await Transaction.find({ status: "pending" });
+  if (pending.length) {
+    pending.forEach(addToPendingMap);
+    console.log(`🔄 Restored ${pending.length} pending transaction(s) from DB`);
+  } else {
+    console.log("💤 No pending transactions, watcher idle");
+  }
 }

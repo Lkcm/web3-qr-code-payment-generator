@@ -1,6 +1,6 @@
 const API_URL = "/api";
 
-export type TransactionStatus = "pending" | "confirmed" | "invalid_amount";
+export type TransactionStatus = "pending" | "confirmed" | "invalid_amount" | "expired";
 
 export interface Transaction {
   _id: string;
