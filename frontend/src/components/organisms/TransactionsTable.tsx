@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import { formatEther } from "viem";
+import { useWallet } from "@/contexts/WalletContext";
 import { getTransactions, Transaction, TransactionStatus } from "@/services/transactions";
 import { useSocket } from "@/contexts/SocketContext";
 
@@ -15,21 +16,31 @@ const TransactionsTable = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const { socket } = useSocket();
+  const { address } = useWallet();
   const transactionsRef = useRef<Transaction[]>([]);
 
-  // Keep ref in sync with state
   useEffect(() => {
     transactionsRef.current = transactions;
   }, [transactions]);
 
   useEffect(() => {
-    getTransactions()
+    console.log("address changed:", address);
+    
+    if (!address) {
+      setTransactions([]);
+      transactionsRef.current = [];
+      setLoading(false);
+      return;
+    }
+  
+    setLoading(true);
+    getTransactions(address)
       .then((data) => {
         setTransactions(data);
         transactionsRef.current = data;
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [address]);
 
   useEffect(() => {
     if (!socket) return;

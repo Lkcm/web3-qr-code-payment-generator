@@ -1,5 +1,5 @@
 "use client";
-import { useWallet } from "@/hooks/useWallet";
+import { useWallet } from "@/contexts/WalletContext";
 import usePaymentLink from "@/hooks/usePaymentLink";
 import PaymentModal from "@/components/molecules/PaymentModal";
 import Input from "@/components/atoms/Input";

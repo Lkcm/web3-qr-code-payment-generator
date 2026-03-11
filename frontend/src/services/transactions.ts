@@ -31,9 +31,9 @@ export const getTransaction = async (id: string): Promise<Transaction> => {
   return data;
 }
 
-export const getTransactions = async (): Promise<Transaction[]> => {
-  const res = await fetch(`${API_URL}/transactions`);
+export const getTransactions = async (address: string): Promise<Transaction[]> => {
+  const res = await fetch(`${API_URL}/transactions?address=${address}`);
   if (!res.ok) throw new Error("Failed to fetch transactions");
   const { data } = await res.json();
   return data;
-}
+};

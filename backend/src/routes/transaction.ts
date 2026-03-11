@@ -14,8 +14,10 @@ const router = Router();
 
 const EXPIRY_SECONDS = 30;
 
-router.get("/", async (_req: Request, res: Response) => {
-  const transactions = await Transaction.find().sort({ createdAt: -1 });
+router.get("/", async (req: Request, res: Response) => {
+  const { address } = req.query;
+  const filter = address ? { address: (address as string).toLowerCase() } : {};
+  const transactions = await Transaction.find(filter).sort({ createdAt: -1 });
   res.json({ data: transactions });
 });
 

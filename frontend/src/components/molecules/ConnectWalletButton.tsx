@@ -1,5 +1,5 @@
 "use client";
-import { useWallet } from "@/hooks/useWallet";
+import { useWallet } from "@/contexts/WalletContext";
 import { useBalance } from "@/hooks/useBalance";
 import Button from "@/components/atoms/Button";
 
