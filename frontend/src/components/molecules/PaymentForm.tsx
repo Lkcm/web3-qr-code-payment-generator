@@ -9,8 +9,12 @@ const PaymentForm = () => {
   const { address } = useWallet();
   const { amount, setAmount, paymentUri, loading, generate, clear } = usePaymentLink(address);
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && address && amount) generate();
+  };
+
   return (
-    <div className="space-y-3">
+    <div className="space-y-3"  onKeyDown={handleKeyDown}>
       <p className="text-gray-400 text-sm">
         {address
           ? `Receiving to: ${address.slice(0, 6)}...${address.slice(-4)}`
