@@ -1,7 +1,17 @@
-import { parseAbi } from "viem";
-import { polygon, polygonAmoy } from "viem/chains";
+import { parseAbi, http } from "viem";
+import { polygon, polygonAmoy, hardhat } from "viem/chains";
 
-export const CHAIN = process.env.CHAIN === "mainnet" ? polygon : polygonAmoy;
+function resolveChain() {
+  switch (process.env.CHAIN) {
+    case "mainnet": return polygon;
+    case "local":   return hardhat;
+    default:        return polygonAmoy;
+  }
+}
+
+export const CHAIN = resolveChain();
+
+export const TRANSPORT = http(process.env.RPC_URL);
 
 export const TOKEN_DECIMALS = 6;
 

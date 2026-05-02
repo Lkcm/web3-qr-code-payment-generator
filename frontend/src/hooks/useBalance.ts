@@ -1,9 +1,7 @@
 import { createPublicClient, http, formatUnits, parseAbi, getAddress } from "viem";
-import { polygon, polygonAmoy } from "viem/chains";
 import { useEffect, useState } from "react";
 import { TokenSymbol } from "@/services/transactions";
-
-const CHAIN = process.env.NEXT_PUBLIC_CHAIN_ID === "137" ? polygon : polygonAmoy;
+import { CHAIN } from "@/lib/wallet";
 
 const TOKEN_ADDRESS: Record<TokenSymbol, string> = {
   USDC: process.env.NEXT_PUBLIC_USDC_ADDRESS ?? "",

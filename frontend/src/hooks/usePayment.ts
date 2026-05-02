@@ -2,7 +2,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { formatUnits, parseAbi, createPublicClient, http, getAddress, parseEther, formatEther } from "viem";
 import { getTransaction, Transaction } from "@/services/transactions";
-import { connectMetaMask, switchToPolygon, executeTokenTransfer, CHAIN, getExpectedChainHex } from "@/lib/wallet";
+import { connectMetaMask, switchToPolygon, executeTokenTransfer, getExpectedChainHex } from "@/lib/wallet";
+import { CHAIN } from "@/lib/wallet";
 import { useSocket } from "@/contexts/SocketContext";
 
 const TOKEN_ADDRESS: Record<string, string> = {

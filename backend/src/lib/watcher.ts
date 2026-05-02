@@ -1,11 +1,11 @@
-import { createPublicClient, http } from "viem";
-import { CHAIN, TOKENS, erc20TransferAbi, TokenSymbol } from "./contracts.js";
+import { createPublicClient } from "viem";
+import { CHAIN, TRANSPORT, TOKENS, erc20TransferAbi, TokenSymbol } from "./contracts.js";
 import Transaction, { ITransaction } from "../models/Transaction.js";
 import { emitTransactionUpdate } from "./socket.js";
 
 const client = createPublicClient({
   chain: CHAIN,
-  transport: http(),
+  transport: TRANSPORT,
 });
 
 type PendingEntry = {

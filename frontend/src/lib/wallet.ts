@@ -1,5 +1,5 @@
 import { createWalletClient, custom, getAddress, parseAbi } from "viem";
-import { polygon, polygonAmoy } from "viem/chains";
+import { polygon, polygonAmoy, hardhat } from "viem/chains";
 import { TokenSymbol } from "@/services/transactions";
 
 declare global {
@@ -12,18 +12,34 @@ declare global {
   }
 }
 
-export const CHAIN = process.env.NEXT_PUBLIC_CHAIN_ID === "137" ? polygon : polygonAmoy;
+const CHAIN_ID = process.env.NEXT_PUBLIC_CHAIN_ID ?? "80002";
 
-const CHAIN_HEX = process.env.NEXT_PUBLIC_CHAIN_ID === "137" ? "0x89" : "0x13882";
+export const CHAIN =
+  CHAIN_ID === "137"   ? polygon   :
+  CHAIN_ID === "31337" ? hardhat   :
+                         polygonAmoy;
+
+const CHAIN_HEX =
+  CHAIN_ID === "137"   ? "0x89"    :
+  CHAIN_ID === "31337" ? "0x7a69"  :
+                         "0x13882";
 
 const CHAIN_PARAMS =
-  process.env.NEXT_PUBLIC_CHAIN_ID === "137"
+  CHAIN_ID === "137"
     ? {
         chainId: "0x89",
         chainName: "Polygon",
         nativeCurrency: { name: "MATIC", symbol: "MATIC", decimals: 18 },
         rpcUrls: ["https://polygon-rpc.com"],
         blockExplorerUrls: ["https://polygonscan.com"],
+      }
+  : CHAIN_ID === "31337"
+    ? {
+        chainId: "0x7a69",
+        chainName: "Hardhat Local",
+        nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
+        rpcUrls: ["http://127.0.0.1:8545"],
+        blockExplorerUrls: [],
       }
     : {
         chainId: "0x13882",
