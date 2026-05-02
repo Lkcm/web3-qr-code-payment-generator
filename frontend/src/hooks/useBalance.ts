@@ -35,7 +35,8 @@ export function useBalance(address: string | null, token: TokenSymbol) {
         functionName: "balanceOf",
         args: [address as `0x${string}`],
       })
-      .then((val) => setBalance(formatUnits(val, 6).slice(0, 8)));
+      .then((val) => setBalance(formatUnits(val, 6).slice(0, 8)))
+      .catch(() => setBalance("0"));
   }, [address, token]);
 
   return balance;
