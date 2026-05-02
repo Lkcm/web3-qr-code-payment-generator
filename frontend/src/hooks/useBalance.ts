@@ -1,9 +1,11 @@
 import { createPublicClient, http, formatEther } from "viem";
-import { bscTestnet } from "viem/chains";
+import { polygon, polygonAmoy } from "viem/chains";
 import { useEffect, useState } from "react";
 
+const CHAIN = process.env.NEXT_PUBLIC_CHAIN_ID === "137" ? polygon : polygonAmoy;
+
 const publicClient = createPublicClient({
-  chain: bscTestnet,
+  chain: CHAIN,
   transport: http(),
 });
 

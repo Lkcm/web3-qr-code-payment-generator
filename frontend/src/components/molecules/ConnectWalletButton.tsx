@@ -15,7 +15,7 @@ const ConnectWalletButton = () => {
     <div className="flex items-center gap-3">
       {balance && (
         <span className="text-sm text-gray-500 font-medium">
-          {balance} BNB
+          {balance} MATIC
         </span>
       )}
       <Button
