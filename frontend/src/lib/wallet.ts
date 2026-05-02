@@ -5,7 +5,7 @@ import { TokenSymbol } from "@/services/transactions";
 declare global {
   interface Window {
     ethereum?: {
-      request: (args: { method: string; params?: unknown }) => Promise<string[]>;
+      request: (args: { method: string; params?: unknown }) => Promise<unknown>;
       on?: (event: string, handler: (...args: unknown[]) => void) => void;
       removeListener?: (event: string, handler: (...args: unknown[]) => void) => void;
     };
@@ -45,9 +45,8 @@ const erc20TransferAbi = parseAbi([
 export async function connectMetaMask() {
   if (!window.ethereum) throw new Error("MetaMask not found");
 
-  const [address] = await window.ethereum.request({
-    method: "eth_requestAccounts",
-  });
+  const accounts = await window.ethereum.request({ method: "eth_requestAccounts" }) as string[];
+  const [address] = accounts;
 
   const client = createWalletClient({
     account: address as `0x${string}`,
@@ -61,22 +60,12 @@ export async function connectMetaMask() {
 export async function switchToPolygon(): Promise<void> {
   if (!window.ethereum) throw new Error("MetaMask not found");
 
-  try {
-    await window.ethereum.request({
-      method: "wallet_switchEthereumChain",
-      params: [{ chainId: CHAIN_HEX }],
-    });
-  } catch (err: unknown) {
-    // Chain not added yet
-    if ((err as { code?: number }).code === 4902) {
-      await window.ethereum.request({
-        method: "wallet_addEthereumChain",
-        params: [CHAIN_PARAMS],
-      });
-    } else {
-      throw err;
-    }
-  }
+  // wallet_addEthereumChain handles both cases:
+  // adds the chain if it doesn't exist, or switches to it if it does
+  await window.ethereum.request({
+    method: "wallet_addEthereumChain",
+    params: [CHAIN_PARAMS],
+  });
 }
 
 export async function executeTokenTransfer(

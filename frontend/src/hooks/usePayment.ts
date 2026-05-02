@@ -63,13 +63,13 @@ const usePayment = (transactionId: string) => {
     if (!transaction || transaction.status !== "pending") return;
     if (!window.ethereum) { setStep("connect"); return; }
 
-    const accounts = await window.ethereum.request({ method: "eth_accounts" });
+    const accounts = await window.ethereum.request({ method: "eth_accounts" }) as string[];
     if (accounts.length === 0) { setStep("connect"); return; }
 
     const address = accounts[0];
     setBuyerAddress(address);
 
-    const [chainId] = await window.ethereum.request({ method: "eth_chainId" });
+    const chainId = await window.ethereum.request({ method: "eth_chainId" }) as string;
     if (chainId.toLowerCase() !== getExpectedChainHex().toLowerCase()) {
       setStep("switch_network");
       return;
