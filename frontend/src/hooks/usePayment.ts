@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { formatUnits, parseAbi, createPublicClient, http, getAddress } from "viem";
+import { formatUnits, parseAbi, createPublicClient, http, getAddress, parseEther, formatEther } from "viem";
 import { getTransaction, Transaction } from "@/services/transactions";
 import { connectMetaMask, switchToPolygon, executeTokenTransfer, CHAIN, getExpectedChainHex } from "@/lib/wallet";
 import { useSocket } from "@/contexts/SocketContext";
@@ -20,6 +20,7 @@ export type PaymentStep =
   | "loading"
   | "connect"
   | "switch_network"
+  | "low_gas"
   | "low_balance"
   | "ready"
   | "sending"
@@ -29,11 +30,14 @@ export type PaymentStep =
   | "invalid_amount"
   | "error";
 
+const MIN_MATIC = parseEther("0.001");
+
 const usePayment = (transactionId: string) => {
   const [transaction, setTransaction] = useState<Transaction | null>(null);
   const [step, setStep] = useState<PaymentStep>("loading");
   const [buyerAddress, setBuyerAddress] = useState<string | null>(null);
   const [buyerBalance, setBuyerBalance] = useState<string | null>(null);
+  const [maticBalance, setMaticBalance] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { socket } = useSocket();
 
@@ -74,6 +78,10 @@ const usePayment = (transactionId: string) => {
       setStep("switch_network");
       return;
     }
+
+    const matic = await publicClient.getBalance({ address: address as `0x${string}` });
+    setMaticBalance(formatEther(matic));
+    if (matic < MIN_MATIC) { setStep("low_gas"); return; }
 
     const tokenAddress = TOKEN_ADDRESS[transaction.token];
     try {
@@ -143,7 +151,7 @@ const usePayment = (transactionId: string) => {
     }
   };
 
-  return { transaction, step, buyerAddress, buyerBalance, errorMessage, connect, switchNetwork, pay };
+  return { transaction, step, buyerAddress, buyerBalance, maticBalance, errorMessage, connect, switchNetwork, pay };
 };
 
 export default usePayment;

@@ -8,6 +8,7 @@ const CHAIN_NAME = process.env.NEXT_PUBLIC_CHAIN_ID === "137" ? "Polygon" : "Pol
 const stepConfig: Partial<Record<PaymentStep, { label: string; action?: string; color: string }>> = {
   connect:        { label: "Connect your MetaMask wallet to continue", action: "Connect Wallet", color: "blue" },
   switch_network: { label: `Switch your wallet to ${CHAIN_NAME}`, action: `Switch to ${CHAIN_NAME}`, color: "orange" },
+  low_gas:        { label: "You need a small amount of MATIC to cover gas fees (~$0.001)", color: "orange" },
   low_balance:    { label: "Insufficient balance to complete this payment", color: "red" },
   ready:          { label: "Everything looks good — confirm the payment below", action: "Pay now", color: "green" },
   sending:        { label: "Waiting for your confirmation in MetaMask...", color: "blue" },
@@ -41,7 +42,7 @@ function useCountdown(expiresAt: string | undefined) {
 }
 
 export default function PaymentView({ id }: { id: string }) {
-  const { transaction, step, buyerBalance, errorMessage, connect, switchNetwork, pay } = usePayment(id);
+  const { transaction, step, buyerBalance, maticBalance, errorMessage, connect, switchNetwork, pay } = usePayment(id);
   const timeLeft = useCountdown(transaction?.expiresAt);
   const config = stepConfig[step];
 
@@ -102,11 +103,21 @@ export default function PaymentView({ id }: { id: string }) {
           </div>
         )}
 
-        {/* Balance */}
+        {/* Balances */}
         {buyerBalance && ["ready", "low_balance"].includes(step) && (
           <p className="text-center text-xs text-gray-400">
             Your balance: <span className="font-medium text-gray-600">{parseFloat(buyerBalance).toFixed(2)} {transaction?.token}</span>
           </p>
+        )}
+        {step === "low_gas" && maticBalance !== null && (
+          <div className="text-center space-y-1">
+            <p className="text-xs text-gray-400">
+              Your MATIC balance: <span className="font-medium text-gray-600">{parseFloat(maticBalance).toFixed(6)} MATIC</span>
+            </p>
+            <p className="text-xs text-gray-400">
+              Get MATIC from any exchange or ask the recipient to send you a small amount.
+            </p>
+          </div>
         )}
 
         {/* Error */}
