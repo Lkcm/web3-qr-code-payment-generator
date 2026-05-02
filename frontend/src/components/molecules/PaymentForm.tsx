@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
 import { useWallet } from "@/contexts/WalletContext";
+import { useToken } from "@/contexts/TokenContext";
 import usePaymentLink from "@/hooks/usePaymentLink";
 import PaymentModal from "@/components/molecules/PaymentModal";
 import Input from "@/components/atoms/Input";
@@ -11,7 +11,7 @@ const TOKENS: TokenSymbol[] = ["USDC", "USDT"];
 
 const PaymentForm = () => {
   const { address } = useWallet();
-  const [token, setToken] = useState<TokenSymbol>("USDC");
+  const { token, setToken } = useToken();
   const { amount, setAmount, paymentUri, loading, generate, clear } = usePaymentLink(address, token);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
