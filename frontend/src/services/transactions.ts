@@ -8,6 +8,7 @@ export interface Transaction {
   address: string;
   expectedAmount: string;
   token: TokenSymbol;
+  expiresAt: string;
   status: TransactionStatus;
   txHash: string | null;
   receivedAmount: string | null;

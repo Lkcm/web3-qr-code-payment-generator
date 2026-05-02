@@ -55,7 +55,7 @@ const PaymentModal = ({ uri, onClose }: Props) => {
         </div>
 
         <p className="text-xs text-gray-400 text-center">
-          Scan with Trust Wallet or any Web3 wallet to send payment
+          Scan to open the payment page
         </p>
 
         {/* Timer */}
