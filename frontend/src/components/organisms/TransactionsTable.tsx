@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
-import { formatEther } from "viem";
+import { formatUnits } from "viem";
 import { useWallet } from "@/contexts/WalletContext";
 import { getTransactions, Transaction, TransactionStatus } from "@/services/transactions";
 import { useSocket } from "@/contexts/SocketContext";
@@ -82,6 +82,7 @@ const TransactionsTable = () => {
         <thead>
           <tr className="border-b border-gray-100 bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
             <th className="text-left px-6 py-4">Address</th>
+            <th className="text-left px-6 py-4">Token</th>
             <th className="text-left px-6 py-4">Expected</th>
             <th className="text-left px-6 py-4">Received</th>
             <th className="text-left px-6 py-4">Status</th>
@@ -97,11 +98,14 @@ const TransactionsTable = () => {
                 <td className="px-6 py-4 font-mono text-gray-700">
                   {tx.address.slice(0, 6)}...{tx.address.slice(-4)}
                 </td>
-                <td className="px-6 py-4 text-gray-700">
-                  {formatEther(BigInt(tx.expectedAmount))} BNB
+                <td className="px-6 py-4 text-gray-500 font-medium">
+                  {tx.token}
                 </td>
                 <td className="px-6 py-4 text-gray-700">
-                  {tx.receivedAmount ? `${formatEther(BigInt(tx.receivedAmount))} BNB` : "—"}
+                  {formatUnits(BigInt(tx.expectedAmount), 6)} {tx.token}
+                </td>
+                <td className="px-6 py-4 text-gray-700">
+                  {tx.receivedAmount ? `${formatUnits(BigInt(tx.receivedAmount), 6)} ${tx.token}` : "—"}
                 </td>
                 <td className="px-6 py-4">
                   <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${config.className}`}>
