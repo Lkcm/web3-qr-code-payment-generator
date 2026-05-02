@@ -1,4 +1,4 @@
-import { createWalletClient, custom } from "viem";
+import { createWalletClient, custom, getAddress } from "viem";
 import { polygon, polygonAmoy } from "viem/chains";
 import { TokenSymbol } from "@/services/transactions";
 
@@ -42,7 +42,7 @@ export async function addTokenToWallet(token: TokenSymbol): Promise<void> {
     method: "wallet_watchAsset",
     params: {
       type: "ERC20",
-      options: { address, symbol: token, decimals },
+      options: { address: getAddress(address), symbol: token, decimals },
     },
   });
 }

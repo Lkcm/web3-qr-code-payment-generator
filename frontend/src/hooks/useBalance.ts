@@ -1,4 +1,4 @@
-import { createPublicClient, http, formatUnits, parseAbi } from "viem";
+import { createPublicClient, http, formatUnits, parseAbi, getAddress } from "viem";
 import { polygon, polygonAmoy } from "viem/chains";
 import { useEffect, useState } from "react";
 import { TokenSymbol } from "@/services/transactions";
@@ -30,7 +30,7 @@ export function useBalance(address: string | null, token: TokenSymbol) {
 
     publicClient
       .readContract({
-        address: contractAddress as `0x${string}`,
+        address: getAddress(contractAddress),
         abi: erc20BalanceAbi,
         functionName: "balanceOf",
         args: [address as `0x${string}`],
