@@ -1,11 +1,12 @@
 import mongoose, { Document, Schema } from "mongoose";
+import { TokenSymbol } from "../lib/contracts.js";
 
 export type TransactionStatus = "pending" | "confirmed" | "invalid_amount" | "expired";
 
 export interface ITransaction extends Document {
   address: string;
   expectedAmount: string;
-  fromBlock: string;
+  token: TokenSymbol;
   expiresAt: Date;
   status: TransactionStatus;
   txHash: string | null;
@@ -18,7 +19,7 @@ const transactionSchema = new Schema<ITransaction>(
   {
     address: { type: String, required: true },
     expectedAmount: { type: String, required: true },
-    fromBlock: { type: String, required: true },
+    token: { type: String, enum: ["USDC", "USDT"], required: true },
     expiresAt: { type: Date, required: true },
     status: {
       type: String,

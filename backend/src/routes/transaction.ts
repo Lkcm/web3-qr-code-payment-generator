@@ -1,18 +1,14 @@
 import { Router, Request, Response } from "express";
-import { createPublicClient, http, parseEther } from "viem";
-import { bscTestnet } from "viem/chains";
+import { parseUnits } from "viem";
 import Transaction from "../models/Transaction.js";
 import { addToPendingMap } from "../lib/watcher.js";
 import { emitTransactionUpdate } from "../lib/socket.js";
-
-const client = createPublicClient({
-  chain: bscTestnet,
-  transport: http(process.env.ANKR_RPC_URL),
-});
+import { TOKEN_DECIMALS, TokenSymbol } from "../lib/contracts.js";
 
 const router = Router();
 
 const EXPIRY_SECONDS = 60;
+const VALID_TOKENS: TokenSymbol[] = ["USDC", "USDT"];
 
 router.get("/", async (req: Request, res: Response) => {
   const { address } = req.query;
@@ -31,20 +27,30 @@ router.get("/:id", async (req: Request, res: Response) => {
 });
 
 router.post("/", async (req: Request, res: Response) => {
-  const { address, amount } = req.body;
+  const { address, amount, token } = req.body;
 
-  if (!address || !amount) {
-    res.status(400).json({ error: "Address and amount are required" });
+  if (!address || amount === undefined || amount === null || !token) {
+    res.status(400).json({ error: "Address, amount and token are required" });
     return;
   }
 
-  const currentBlock = await client.getBlockNumber();
+  if (!VALID_TOKENS.includes(token)) {
+    res.status(400).json({ error: `Token must be one of: ${VALID_TOKENS.join(", ")}` });
+    return;
+  }
+
+  const parsed = Number(amount);
+  if (isNaN(parsed) || parsed <= 0) {
+    res.status(400).json({ error: "Amount must be a valid positive number" });
+    return;
+  }
+
   const expiresAt = new Date(Date.now() + EXPIRY_SECONDS * 1000);
 
   const transaction = await Transaction.create({
     address: address.toLowerCase(),
-    expectedAmount: parseEther(amount).toString(),
-    fromBlock: currentBlock.toString(),
+    expectedAmount: parseUnits(amount, TOKEN_DECIMALS).toString(),
+    token,
     expiresAt,
   });
 
