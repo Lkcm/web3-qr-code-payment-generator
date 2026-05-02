@@ -10,7 +10,7 @@ interface Props {
 
 const PaymentModal = ({ uri, onClose }: Props) => {
   const [copied, setCopied] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(60);
+  const [timeLeft, setTimeLeft] = useState(300);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -59,10 +59,10 @@ const PaymentModal = ({ uri, onClose }: Props) => {
         </p>
 
         {/* Timer */}
-        <div className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl ${timeLeft <= 10 ? "bg-red-50" : "bg-yellow-50"}`}>
-          <div className={`w-2 h-2 rounded-full animate-pulse ${timeLeft <= 10 ? "bg-red-400" : "bg-yellow-400"}`} />
-          <span className={`text-sm font-medium ${timeLeft <= 10 ? "text-red-600" : "text-yellow-600"}`}>
-            This link expires in {timeLeft}s
+        <div className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl ${timeLeft <= 30 ? "bg-red-50" : "bg-yellow-50"}`}>
+          <div className={`w-2 h-2 rounded-full animate-pulse ${timeLeft <= 30 ? "bg-red-400" : "bg-yellow-400"}`} />
+          <span className={`text-sm font-medium ${timeLeft <= 30 ? "text-red-600" : "text-yellow-600"}`}>
+            This link expires in {String(Math.floor(timeLeft / 60)).padStart(2, "0")}:{String(timeLeft % 60).padStart(2, "0")}
           </span>
         </div>
 

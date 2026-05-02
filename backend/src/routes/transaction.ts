@@ -7,7 +7,7 @@ import { TOKEN_DECIMALS, TokenSymbol } from "../lib/contracts.js";
 
 const router = Router();
 
-const EXPIRY_SECONDS = 60;
+const EXPIRY_SECONDS = 300;
 const VALID_TOKENS: TokenSymbol[] = ["USDC", "USDT"];
 
 router.get("/", async (req: Request, res: Response) => {
